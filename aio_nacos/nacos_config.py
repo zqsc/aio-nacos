@@ -15,20 +15,33 @@ import json
 import hashlib
 
 
-
 class NacosConfig:
     """同步配置"""
+    _instance = None
+    _first_init = True
+
+    def __new__(cls, *args, **kwargs):
+        # 单例模式
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, nacos_client=None):
+        if self.__class__._first_init:  # 防止重复初始化
+            self.__class__._first_init = False
+            super().__init__()
+        else:
+            return
+        assert nacos_client, 'AioNacos未初始化'
+        # 必须值验证
+        self.nacos_client = nacos_client
+        self.conf_md5 = ''  # md5值
+        self.logger = nacos_client.logger
+        self.config_pool = {}
 
     @staticmethod
     def make_MD5(content: bytes):
         return hashlib.md5(content).hexdigest()
-
-    def __init__(self, nacos_client):
-        # 必须值验证
-        self.nacos_client = nacos_client
-        self.conf_md5 = ''  # md5值
-        self.loger = nacos_client.loger
-        self.config_pool = {}
 
     async def init_config(self, data_id: str = None, group: str = None, tenant: str = 'public'):
         await self.__get_config(data_id, group, tenant)
@@ -61,7 +74,7 @@ class NacosConfig:
 
     async def __get_config(self, data_id, group, tenant):
         """获得配置配置， 并写入配置池中"""
-        self.loger.info('从nacos中更新配置-data_id:%s; grout:%s; tenant:%s' % (data_id, group, tenant))
+        self.logger.info('从nacos中更新配置-data_id:%s; grout:%s; tenant:%s' % (data_id, group, tenant))
         # 基础参数
         params = {'dataId': data_id, 'group': group, }
         # 非必要参数
@@ -85,5 +98,5 @@ class NacosConfig:
         if self.config_pool.get(attr):
             return self.config_pool.get(attr)
         else:
-            self.loger.warning('没有同步该配置:%s' % attr)
+            self.logger.warning('没有同步该配置:%s' % attr)
             return None

@@ -13,7 +13,7 @@ from setuptools import setup
 
 setup(
     name='aio_nacos',
-    version='0.1.2',
+    version='0.1.4',
     author='zqsc',
     author_email='zhao_zqsc@sina.com',
     url='https://github.com/zqsc/aio-nacos',

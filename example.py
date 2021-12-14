@@ -32,4 +32,5 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     nc = AioNacos(loop, '127.0.0.1', n_port=8848, n_user='nacos', n_password='nacos')
 
+
     loop.run_until_complete(example())

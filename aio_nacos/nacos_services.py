@@ -16,19 +16,31 @@ import json
 from random import choice
 
 
-
-
 class NacosServices:
     """监视服务管理"""
 
-    def __init__(self, nacos_client):
-        assert nacos_client
+    _instance = None
+    _first_init = True
+
+    def __new__(cls, *args, **kwargs):
+        # 单例模式
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, nacos_client=None):
+        if self.__class__._first_init:  # 防止重复初始化
+            self.__class__._first_init = False
+            super().__init__()
+        else:
+            return
+        assert nacos_client, 'AioNacos未初始化'
         self.nacos_client = nacos_client  # nacos连接对象
         self.loop = self.nacos_client.loop  # 事件循环
         self.session = self.nacos_client.session  # 连接池
 
         self.services_pool = {}
-        self.loger = self.nacos_client.loger
+        self.logger = self.nacos_client.logger
 
     async def watch_service(self, service_name, group, namespace_id, clusters=None, healthy_only=True):
         """添加监视服务器"""
@@ -59,7 +71,7 @@ class NacosServices:
             res = await response.read()
             result = json.loads(res)
             if self.services_pool[service_name].services != result['hosts']:
-                self.loger.info('更新组件：%s' % service_name)
+                self.logger.info('更新组件：%s' % service_name)
                 self.services_pool[service_name].services = result['hosts']
 
     async def __while_service(self, service_name, group, namespace_id, clusters, healthy_only):
@@ -80,5 +92,5 @@ class NacosServices:
         if self.services_pool.get(attr):
             return self.services_pool.get(attr)
         else:
-            self.loger.warning('没有同步该配置:%s' % attr)
+            self.logger.warning('没有同步该配置:%s' % attr)
             return None

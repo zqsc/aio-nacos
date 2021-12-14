@@ -22,14 +22,30 @@ import logging
 
 class AioNacos():
     """协程nacos驱动"""
+    _instance = None
+    _first_init = True
 
-    def __init__(self, loop, n_host, n_port, n_user, n_password, proxy=None, loger=None):
+    def __new__(cls, *args, **kwargs):
+        # 单例模式
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, loop=None, n_host='127.0.0.1', n_port=8848, n_user='nacos', n_password='nacos', proxy=None,
+                 logger=None):
+        if self.__class__._first_init:  # 防止重复初始化
+            self.__class__._first_init = False
+            super().__init__()
+        else:
+            return
+        assert loop, '初始化必要值: loop'
+
         self.nacos_addr = f'http://{n_host}:{n_port}'
         self.user = n_user
         self.password = n_password
         self.loop = loop
         self.proxy = proxy
-        self.loger = loger if loger else logging
+        self.logger = logger if logger else logging
         self.conn = aiohttp.TCPConnector(verify_ssl=False, loop=self.loop)
         self.session = aiohttp.ClientSession(connector=self.conn, loop=self.loop)
 
@@ -41,7 +57,7 @@ class AioNacos():
         self.nacos_config = NacosConfig(self)
         self.nacos_services = NacosServices(self)
 
-        self.loger.info('nacos连接成功')
+        self.logger.info('nacos连接成功')
 
     async def __get_token(self):
         """获取token"""
@@ -58,7 +74,7 @@ class AioNacos():
 
     async def __keep_login(self):
         """保持登录 self.token, self.ttl"""
-        self.loger.debug('保持token持续登录')
+        self.logger.debug('保持token持续登录')
         while 1:
             if not self.token or self.ttl - 4 < datetime.now().timestamp():
                 await self.__get_token()
@@ -99,7 +115,7 @@ class AioNacos():
         """ 持续注册本服务"""
         self.loop.create_task(
             self.put_heartbeat(s_name, s_host, s_port, weight, ephemeral, group_name, namespace_id, metadata))
-        self.loger.info('已开启心跳循环')
+        self.logger.info('已开启心跳循环')
         return True
 
     def add_url_auth(self, url: str) -> str:
@@ -114,7 +130,7 @@ class AioNacos():
     async def close(self):
         """关闭"""
         await asyncio.gather(self.conn.close(), self.session.close())
-        self.loger.info('已关闭nacos连接')
+        self.logger.info('已关闭nacos连接')
 
     # 配置
     async def init_config(self, data_id: str = None, group: str = None, tenant: str = 'public'):
