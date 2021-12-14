@@ -9,7 +9,7 @@ from aio_nacos import AioNacos
 async def example():
     """举例"""
 
-    await nc.register('example', '192.168..8.66', 4444)
+    await nc.register('example', '192.168.8.66', 4444)
 
     conf = await nc.init_config('config-property', 'BDCT', 'test-space')
 
