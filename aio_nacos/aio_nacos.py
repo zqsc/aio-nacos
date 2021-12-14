@@ -11,10 +11,10 @@
 
 import asyncio
 import aiohttp
-from nacos_config import NacosConfig
-from nacos_services import NacosServices
-from nacos_error import check_status, NacosServerRegisterError
-from nacos_models import Beat
+from .nacos_config import NacosConfig
+from .nacos_services import NacosServices
+from .nacos_error import check_status, NacosServerRegisterError
+from .nacos_models import Beat
 from datetime import datetime
 import json
 import logging
@@ -39,7 +39,7 @@ class AioNacos():
         self.loop.create_task(self.__keep_login())  # 持续登录
 
         self.nacos_config = NacosConfig(self)
-        self.nacos_serveices = NacosServices(self)
+        self.nacos_services = NacosServices(self)
 
         self.loger.info('nacos连接成功')
 
@@ -118,12 +118,12 @@ class AioNacos():
 
     # 配置
     async def init_config(self, data_id: str = None, group: str = None, tenant: str = 'public'):
-        """返回config类， 使用config[data_id]获取配置"""
+        """监视配置，返回 NacosConfig， 使用 NacosConfig[data_id] 获取配置"""
         await self.nacos_config.init_config(data_id, group, tenant)
         return self.nacos_config
 
     # 监视器
     async def watch_service(self, service_name, group, namespace_id, healthy_only=True):
-        """监视服务"""
-        await self.nacos_serveices.watch_service(service_name, group, namespace_id, healthy_only=True)
-        return self.nacos_serveices
+        """监视服务， 返回 NacosServices, 使用 NacosServices[service_name] 获取对应服务列表"""
+        await self.nacos_services.watch_service(service_name, group, namespace_id, healthy_only=True)
+        return self.nacos_services

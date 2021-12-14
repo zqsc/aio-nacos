@@ -9,8 +9,8 @@
 @Python Version :    3.8.5
 """
 
-from nacos_error import check_status
-from nacos_models import Config
+from .nacos_error import check_status
+from .nacos_models import Config
 import json
 import hashlib
 
@@ -57,7 +57,6 @@ class NacosConfig:
                                                   proxy=self.nacos_client.proxy) as response:
             check_status(response.status)
             res = await response.read()
-            # print(res)
             return res
 
     async def __get_config(self, data_id, group, tenant):
@@ -78,7 +77,6 @@ class NacosConfig:
             res = await response.read()
         # 解析配置
         if conf_type == 'json':
-            # self.config = json.loads(res)
             conf = Config(conf_md5)
             conf.__dict__.update(json.loads(res))
             self.config_pool[data_id] = conf

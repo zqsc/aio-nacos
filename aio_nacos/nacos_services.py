@@ -9,8 +9,8 @@
 @Python Version :    3.8.5
 """
 
-from nacos_error import check_status
-from nacos_models import Services
+from .nacos_error import check_status
+from .nacos_models import Services
 import asyncio
 import json
 from random import choice
